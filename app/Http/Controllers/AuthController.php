@@ -87,33 +87,34 @@ class AuthController extends Controller
 
     public function lineLoginCallback()
     {
-        try {
-            $user = Socialite::driver('line')->user();
+        // try {
+        $user = Socialite::driver('line')->user();
+        dd($user);
 
-            // 查找或創建用戶邏輯
-            $authUser = User::where('line_id', $user->getId())->first();
+        // 查找或創建用戶邏輯
+        //     $authUser = User::where('line_id', $user->getId())->first();
 
-            if ($authUser) {
-                Auth::login($authUser);
-                $token = $authUser->createToken('Line')->accessToken;
-                return response()->json(['token' => $token], Response::HTTP_OK);
-            }
+        //     if ($authUser) {
+        //         Auth::login($authUser);
+        //         $token = $authUser->createToken('Line')->accessToken;
+        //         return response()->json(['token' => $token], Response::HTTP_OK);
+        //     }
 
-            $newUser = User::create([
-                'name' => $user->getName(),
-                'email' => $user->getEmail(),
-                'line_id' => $user->getId(),
-                'avatar' => $user->getAvatar(),
-                'provider_name' => 'line',
-                'provider_token' => $user->token,
-            ]);
+        //     $newUser = User::create([
+        //         'name' => $user->getName(),
+        //         'email' => $user->getEmail(),
+        //         'line_id' => $user->getId(),
+        //         'avatar' => $user->getAvatar(),
+        //         'provider_name' => 'line',
+        //         'provider_token' => $user->token,
+        //     ]);
 
-            Auth::login($newUser);
-            $token = $newUser->createToken('Line')->accessToken;
-            return response()->json(['token' => $token], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            Log::error('LINE 登入錯誤: ' . $e->getMessage());
-            return response()->json(['error' => '無法登入。'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        //     Auth::login($newUser);
+        //     $token = $newUser->createToken('Line')->accessToken;
+        //     return response()->json(['token' => $token], Response::HTTP_OK);
+        // } catch (\Exception $e) {
+        //     Log::error('LINE 登入錯誤: ' . $e->getMessage());
+        //     return response()->json(['error' => '無法登入。'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        // }
     }
 }
