@@ -25,7 +25,8 @@ class User extends Authenticatable
         'cel',
         'email',
         'password',
-        'google_id', // 更新以匹配遷移和控制器
+        'google_id',
+        'line_id',
         'avatar',
         'provider_name',
         'provider_token',

@@ -15,7 +15,8 @@
         "laravel/passport": "^10.4",
         "laravel/sanctum": "^2.11",
         "laravel/socialite": "^5.15",
-        "laravel/tinker": "^2.5"
+        "laravel/tinker": "^2.5",
+        "socialiteproviders/line": "^4.1"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
