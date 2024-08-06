@@ -85,7 +85,7 @@ class AuthController extends Controller
         return Socialite::driver('line')->redirect();
     }
 
-    public function lineCallback()
+    public function lineLoginCallback()
     {
         try {
             $user = Socialite::driver('line')->user();
