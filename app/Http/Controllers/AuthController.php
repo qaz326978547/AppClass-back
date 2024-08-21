@@ -117,7 +117,7 @@ class AuthController extends Controller
             return response()->json(['token' => $token], Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('LINE 登入錯誤: ' . $e->getMessage());
-            return response()->json(['error' => '無法登入。'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
