@@ -31,13 +31,22 @@ class AddGoogleAccountToUsersTable extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'google_id')) {
+                $table->dropColumn('google_id');
+            }
+            if (Schema::hasColumn('users', 'avatar')) {
+                $table->dropColumn('avatar');
+            }
+            if (Schema::hasColumn('users', 'provider_name')) {
+                $table->dropColumn('provider_name');
+            }
+            if (Schema::hasColumn('users', 'provider_token')) {
+                $table->dropColumn('provider_token');
+            }
+            if (Schema::hasColumn('users', 'last_login_at')) {
+                $table->dropColumn('last_login_at');
+            }
 
-            $table->dropIndex('user_g_idx');
-            $table->dropColumn('google_account');
-            $table->dropColumn('avatar');
-            $table->dropColumn('provider_name');
-            $table->dropColumn('provider_token');
-            $table->dropColumn('last_login_at');
         });
     }
 }
