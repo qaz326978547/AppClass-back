@@ -42,8 +42,8 @@ class AuthController extends Controller
                 Auth::login($authUser);
                 // 生成 Passport Token
                  // 生成 Passport Token
-                $tokenResult = $authUser->createToken('Token'); //建立token
-                $token = $tokenResult->accessToken; //取得token
+                $tokenResult = $authUser->createToken('Google'); //建立token
+                $token = $tokenResult->plainTextToken; //取得token
                 return response()->json(['token' => $token], Response::HTTP_OK);
             }
 
@@ -56,7 +56,7 @@ class AuthController extends Controller
                 Auth::login($existUser);
                 // 生成 Passport Token
                 $tokenResult = $existUser->createToken('Google');
-                $token = $tokenResult->accessToken; // 這裡提取 accessToken
+                $token = $tokenResult->plainTextToken; // 這裡提取 accessToken
                 return response()->json(['token' => $token], Response::HTTP_OK);
             } else {
                 // 创建新用户
@@ -75,7 +75,7 @@ class AuthController extends Controller
                 Auth::login($newUser);
                 // 生成 Passport Token
                 $tokenResult = $newUser->createToken('Google');
-                $token = $tokenResult->accessToken; // 這裡提取 accessToken
+                $token = $tokenResult->plainTextToken; // 這裡提取 accessToken
                 return response()->json(['token' => $token], Response::HTTP_OK);
             }
         } catch (\Exception $e) {
