@@ -44,7 +44,7 @@ class AuthController extends Controller
                  // 生成 Passport Token
                 $tokenResult = $authUser->createToken('Google');
                 $token = $tokenResult->accessToken; // 這裡提取 accessToken
-                return response()->json(['token' => $token], Response::HTTP_OK);
+                return response()->json(['token' => $token->accessToken], Response::HTTP_OK);
             }
 
             // 根据 email 查找现有用户
@@ -57,7 +57,7 @@ class AuthController extends Controller
                 // 生成 Passport Token
                 $tokenResult = $existUser->createToken('Google');
                 $token = $tokenResult->accessToken; // 這裡提取 accessToken
-                return response()->json(['token' => $token], Response::HTTP_OK);
+                return response()->json(['token' => $token->accessToken], Response::HTTP_OK);
             } else {
                 // 创建新用户
                 $newUser = User::create([
@@ -76,7 +76,7 @@ class AuthController extends Controller
                 // 生成 Passport Token
                 $tokenResult = $newUser->createToken('Google');
                 $token = $tokenResult->accessToken; // 這裡提取 accessToken
-                return response()->json(['token' => $token], Response::HTTP_OK);
+                return response()->json(['token' => $token->accessToken], Response::HTTP_OK);
             }
         } catch (\Exception $e) {
             // 记录错误并返回 JSON 错误响应
