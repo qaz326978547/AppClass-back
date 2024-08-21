@@ -95,13 +95,27 @@ class AuthController extends Controller
         $user = Socialite::driver('line')->user();
 
         // 查找或創建用戶邏輯
+        // 根據 line_id 查找現有用戶
+        // 如果用戶存在，則直接登入
             $authUser = User::where('line_id', $user->getId())->first();
 
             if ($authUser) {
                 Auth::login($authUser);
-                $token = $authUser->createToken('Line')->accessToken;
+                $token = $authUser->createToken('Line')->plainTextToken;
                 return response()->json(['token' => $token], Response::HTTP_OK);
             }
+
+            // 根據 email 查找現有用戶
+            // 如果用戶存在，則更新 line_id
+            $existUser = User::where('email', $user->getEmail())->first();
+            if ($existUser) {
+                $existUser->line_id = $user->getId();
+                $existUser->save();
+                Auth::login($existUser);
+                $token = $existUser->createToken('Line')->plainTextToken;
+                return response()->json(['token' => $token], Response::HTTP_OK);
+            }
+
 
             $newUser = User::create([
                 'name' => $user->getName(),
@@ -113,7 +127,7 @@ class AuthController extends Controller
             ]);
 
             Auth::login($newUser);
-            $token = $newUser->createToken('Line')->accessToken;
+            $token = $newUser->createToken('Line')->plainTextToken;
             return response()->json(['token' => $token], Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('LINE 登入錯誤: ' . $e->getMessage());
