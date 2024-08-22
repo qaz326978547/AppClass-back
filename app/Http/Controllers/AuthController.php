@@ -30,108 +30,78 @@ class AuthController extends Controller
      */
     public function googleLoginCallback()
     {
-        try {
-            // 获取 Google 用户信息
-            $user = Socialite::driver('google')->user();
-
-            // 查找已有用户
-            $authUser = User::where('google_id', $user->getId())->first();
-
-            if ($authUser) {
-                // 已有用户，直接登录
-                Auth::login($authUser);
-                // 生成 Passport Token
-                 // 生成 Passport Token
-                $tokenResult = $authUser->createToken('Google'); //建立token
-                $token = $tokenResult->plainTextToken; //取得token
-                return response()->json(['token' => $token], Response::HTTP_OK);
-            }
-
-            // 根据 email 查找现有用户
-            $existUser = User::where('email', $user->getEmail())->first();
-            if ($existUser) {
-                // 更新 Google ID
-                $existUser->google_id = $user->getId();
-                $existUser->save();
-                Auth::login($existUser);
-                // 生成 Passport Token
-                $tokenResult = $existUser->createToken('Google');
-                $token = $tokenResult->plainTextToken; // 這裡提取 accessToken
-                return response()->json(['token' => $token], Response::HTTP_OK);
-            } else {
-                // 创建新用户
-                $newUser = User::create([
-                    'name' => $user->getName(),
-                    'firstName' => $user->user['given_name'],
-                    'password' => Hash::make('password'), // 考虑生成唯一密码
-                    'email' => $user->getEmail(),
-                    'google_id' => $user->getId(), // 一致使用 google_id
-                    'avatar' => $user->getAvatar(),
-                    'provider_name' => 'google',
-                    'provider_token' => $user->token,
-                    'last_login_at' => now(),
-                ]);
-
-                Auth::login($newUser);
-                // 生成 Passport Token
-                $tokenResult = $newUser->createToken('Google');
-                $token = $tokenResult->plainTextToken; // 這裡提取 accessToken
-                return response()->json(['token' => $token], Response::HTTP_OK);
-            }
-        } catch (\Exception $e) {
-            // 记录错误并返回 JSON 错误响应
-            Log::error('Google 登入錯誤: ' . $e->getMessage());
-            return response()->json(['error' => '無法登入。'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return $this->handleSocialLogin('google');
     }
-    public function lineLogin()
+    public function lineLogin(): RedirectResponse
+   
     {
         return Socialite::driver('line')->redirect();
     }
 
     public function lineLoginCallback()
     {
+        return $this->handleSocialLogin('line');
+    }
+
+
+    private function handleSocialLogin($provider)
+    {
         try {
-        $user = Socialite::driver('line')->user();
-
-        // 查找或創建用戶邏輯
-        // 根據 line_id 查找現有用戶
-        // 如果用戶存在，則直接登入
-            $authUser = User::where('line_id', $user->getId())->first();
-
-            if ($authUser) {
-                Auth::login($authUser);
-                $token = $authUser->createToken('Line')->plainTextToken;
+            $socialUser = Socialite::driver($provider)->user();
+            $user = User::where('email', $socialUser->getEmail())->first();
+            if ($user) {
+                if ($user->provider_name !== $provider) {
+                    return response()->json([
+                        'error' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。',
+                    ], Response::HTTP_CONFLICT);
+                }
+                //更新提供者 ID
+                $this->updateProviderId($user, $provider, $socialUser->getId());
+                Auth::login($user);
+                $token = $user->createToken($provider)->plainTextToken;
                 return response()->json(['token' => $token], Response::HTTP_OK);
             }
-
-            // 根據 email 查找現有用戶
-            // 如果用戶存在，則更新 line_id
-            $existUser = User::where('email', $user->getEmail())->first();
-            if ($existUser) {
-                $existUser->line_id = $user->getId();
-                $existUser->save();
-                Auth::login($existUser);
-                $token = $existUser->createToken('Line')->plainTextToken;
-                return response()->json(['token' => $token], Response::HTTP_OK);
-            }
-
-
-            $newUser = User::create([
-                'name' => $user->getName(),
-                'email' => $user->getEmail(),
-                'line_id' => $user->getId(),
-                'avatar' => $user->getAvatar(),
-                'provider_name' => 'line',
-                'provider_token' => $user->token,
-            ]);
-
+            $newUser = $this->createNewUser($socialUser, $provider);
             Auth::login($newUser);
-            $token = $newUser->createToken('Line')->plainTextToken;
+            $token = $newUser->createToken($provider)->plainTextToken;
             return response()->json(['token' => $token], Response::HTTP_OK);
         } catch (\Exception $e) {
-            Log::error('LINE 登入錯誤: ' . $e->getMessage());
+            Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
             return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+
+    /**
+     * 新增使用者
+     * @param mixed $socialUser
+     * @param mixed $provider
+     * @return User|\Illuminate\Database\Eloquent\Model
+     */
+    private function createNewUser($socialUser, $provider)
+    {
+        return User::create([
+            'name' => $socialUser->getName(),
+            'email' => $socialUser->getEmail(),
+            'line_id' => $socialUser->getId(),
+            'avatar' => $socialUser->getAvatar(),
+            'provider_name' => $provider,
+            'provider_token' => $socialUser->token,
+            'last_login_at' => now(),
+        ]);
+    }
+
+    /**
+     * 更新提供者 ID
+     * @param User $user
+     * @param mixed $provider
+     * @param mixed $providerId
+     */
+
+    private function updateProviderId(User $user, $provider, $providerId)
+    {
+        $user->{$provider . '_id'} = $providerId;
+        $user->save();
+    }
+
 }
