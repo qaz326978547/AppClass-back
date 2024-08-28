@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         //
         '/auth/line/callback',
         '/auth/google/callback',
+        'api/*'
     ];
 }
