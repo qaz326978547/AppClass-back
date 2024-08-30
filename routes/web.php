@@ -19,6 +19,6 @@ Route::get('/', function () {
 });
 
 Route::get('api/auth/google', [AuthController::class, 'googleLogin'])->name('auth.google');
-Route::get('/auth/google/callback', [AuthController::class, 'googleLoginCallback']);
+Route::get('api/auth/google/callback', [AuthController::class, 'googleLoginCallback']);
 Route::get('api/auth/line', [AuthController::class, 'lineLogin']);
-Route::get('/auth/line/callback', [AuthController::class, 'lineLoginCallback']);
+Route::get('api/auth/line/callback', [AuthController::class, 'lineLoginCallback']);
