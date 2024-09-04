@@ -114,6 +114,23 @@ class AuthController extends Controller
         }
     }
 
+    public function getToken(Request $request)
+{
+    $token = $request->session()->get('token');
+    if ($token) {
+        // 从 session 中获取 token
+        $request->session()->forget('token'); // 确保 token 被清除
+        return response()->json([
+            'status' => 'success',
+            'token' => $token
+        ]);
+    } else {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Token not found'
+        ], Response::HTTP_NOT_FOUND);
+    }
+}
 
     /**
      * 新增使用者

@@ -25,6 +25,6 @@ Route::middleware(['web'])->group(function () {
     Route::get('/auth/{provider}/redirect', [AuthController::class, 'redirectToProvider']);
     Route::post('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
 });
-
+Route::get('/auth/token', [AuthController::class, 'getToken'])->name('token');
 // Route::get('/auth/google', [AuthController::class, 'googleLogin'])->name('/auth/google');
 // Route::get('/auth/google/callback', [AuthController::class, 'googleLoginCallback'])->name('/auth/google/callback');
