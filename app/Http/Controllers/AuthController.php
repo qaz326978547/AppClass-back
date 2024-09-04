@@ -67,114 +67,42 @@ class AuthController extends Controller
     }
 
 
-    public function redirectToProvider(string $provider)
+    public function redirectToProvider(Request $provider)
+
     {
         return Socialite::driver($provider)->redirect();
-    }
-
-    public function handleProviderCallback(Request $request, $provider)
-    {
-        try {
-            $socialUser = Socialite::driver($provider)->user();
-            return response()->json($socialUser);
-            // Log::info('Social User Data:', [
-            //     'id' => $socialUser->getId(),
-            //     'nickname' => $socialUser->getNickname(),
-            //     'name' => $socialUser->getName(),
-            //     'email' => $socialUser->getEmail(),
-            //     'avatar' => $socialUser->getAvatar(),
-            // ]); 
-            // $user = User::where('email', $socialUser->getEmail())->first();
-            if ($user) {
-                if ($user->provider_name !== $provider) {
-                    return response()->json([
-                        'error' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。',
-                    ], Response::HTTP_CONFLICT);
-                    
-                }
-                //更新提供者 ID
-                // $this->updateProviderId($user, $provider, $socialUser->getId());
-                // Auth::login($user);
-                // $user->last_login_at = now();
-                // $user->save();
-                // $token = $user->createToken($provider)->plainTextToken;
-                // return response()->json(['token' => $token], Response::HTTP_OK);
-            }
-            // $newUser = $this->createNewUser($socialUser, $provider);
-            // Auth::login($newUser);
-            // $token = $newUser->createToken($provider)->plainTextToken;
-            // return response()->json(['token' => $token], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            Log::error('Exception occurred: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
-            return response()->json(['error' => '無法登入。', 'message' => $e->getMessage(),'Stack trace',$e->getTraceAsString(),], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-
-    /**
-     *  將用戶重定向到 Google 的授權頁面
-     *
-     * @return RedirectResponse
-     */
-    public function googleLogin(): RedirectResponse
-    {
-        return Socialite::driver('google')->redirect();
-    }
-
-    /**
-     *  從 Google 取得用戶資訊
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function googleLoginCallback()
-    {
-        return $this->handleSocialLogin('google');
-    }
-    /**
-     *  將用戶重定向到 Line 的授權頁面
-     *
-     * @return RedirectResponse
-     */
     
-    public function lineLogin(): RedirectResponse
-    {
-        return Socialite::driver('line')->redirect();
     }
 
-    public function lineLoginCallback()
+    public function handleProviderCallback($provider)
     {
-        return $this->handleSocialLogin('line');
-    }
-
-    private function handleSocialLogin($provider)
-    {
-        try {
-            $socialUser = Socialite::driver($provider)->user();
-            $user = User::where('email', $socialUser->getEmail())->first();
-            if ($user) {
-                if ($user->provider_name !== $provider) {
-                    return response()->json([
-                        'error' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。',
-                    ], Response::HTTP_CONFLICT);
-                    
+        {
+            try {
+                $socialUser = Socialite::driver($provider)->user();
+                $user = User::where('email', $socialUser->getEmail())->first();
+                if ($user) {
+                    if ($user->provider_name !== $provider) {
+                        return response()->json([
+                            'error' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。',
+                        ], Response::HTTP_CONFLICT);
+                        
+                    }
+                    //更新提供者 ID
+                    $this->updateProviderId($user, $provider, $socialUser->getId());
+                    Auth::login($user);
+                    $user->last_login_at = now();
+                    $user->save();
+                    $token = $user->createToken($provider)->plainTextToken;
+                    return response()->json(['token' => $token], Response::HTTP_OK);
                 }
-                //更新提供者 ID
-                $this->updateProviderId($user, $provider, $socialUser->getId());
-                Auth::login($user);
-                $user->last_login_at = now();
-                $user->save();
-                $token = $user->createToken($provider)->plainTextToken;
+                $newUser = $this->createNewUser($socialUser, $provider);
+                Auth::login($newUser);
+                $token = $newUser->createToken($provider)->plainTextToken;
                 return response()->json(['token' => $token], Response::HTTP_OK);
+            } catch (\Exception $e) {
+                Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
+                return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
-            $newUser = $this->createNewUser($socialUser, $provider);
-            Auth::login($newUser);
-            $token = $newUser->createToken($provider)->plainTextToken;
-            return response()->json(['token' => $token], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
-            return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
