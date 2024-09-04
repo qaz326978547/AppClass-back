@@ -74,35 +74,43 @@ class AuthController extends Controller
     
     }
 
-    public function handleProviderCallback($provider)
+    public function handleProviderCallback(Request $request, $provider)
     {
-        {
-            try {
-                $socialUser = Socialite::driver($provider)->user();
-                $user = User::where('email', $socialUser->getEmail())->first();
-                if ($user) {
-                    if ($user->provider_name !== $provider) {
-                        return response()->json([
-                            'error' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。',
-                        ], Response::HTTP_CONFLICT);
-                        
-                    }
-                    //更新提供者 ID
-                    $this->updateProviderId($user, $provider, $socialUser->getId());
-                    Auth::login($user);
-                    $user->last_login_at = now();
-                    $user->save();
-                    $token = $user->createToken($provider)->plainTextToken;
-                    return response()->json(['token' => $token], Response::HTTP_OK);
+        try {
+            // 获取 OAuth 提供者的用户信息
+            $socialUser = Socialite::driver($provider)->user();
+            
+            // 查找或创建用户
+            $user = User::where('email', $socialUser->getEmail())->first();
+            if ($user) {
+                // 用户已存在，更新提供者信息
+                if ($user->provider_name !== $provider) {
+                    return redirect('http://localhost:5173/login')
+                        ->with('error', '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。');
                 }
-                $newUser = $this->createNewUser($socialUser, $provider);
-                Auth::login($newUser);
-                $token = $newUser->createToken($provider)->plainTextToken;
-                return response()->json(['token' => $token], Response::HTTP_OK);
-            } catch (\Exception $e) {
-                Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
-                return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+                // 更新提供者 ID
+                $this->updateProviderId($user, $provider, $socialUser->getId());
+                Auth::login($user);
+                $user->last_login_at = now();
+                $user->save();
+            } else {
+                // 用户不存在，创建新用户
+                $user = $this->createNewUser($socialUser, $provider);
+                Auth::login($user);
             }
+            
+            // 生成 token
+            $token = $user->createToken($provider)->plainTextToken;
+            
+            // 存储 token 到 session 中
+            $request->session()->put('token', $token);
+            
+            // 重定向到前端页面
+            return redirect()->to('http://localhost:5173/auth/{$provider}/success')->with('message', '登入成功');
+            
+        } catch (\Exception $e) {
+            Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
+            return redirect()->to('http://localhost:5173/login')->with('error', '無法登入。');
         }
     }
 
