@@ -69,10 +69,7 @@ class AuthController extends Controller
 
     public function redirectToProvider(string $provider)
     {
-        $url =  Socialite::driver($provider)->redirect()->getTargetUrl();
-        return  response()->json(['url' => $url], Response::HTTP_OK);
-    
-    
+        return Socialite::driver($provider)->redirect();
     }
 
     public function handleProviderCallback(Request $request, $provider)
