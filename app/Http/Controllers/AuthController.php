@@ -76,6 +76,13 @@ class AuthController extends Controller
     {
         try {
             $socialUser = Socialite::driver($provider)->user();
+            Log::info('Social User Data:', [
+                'id' => $socialUser->getId(),
+                'nickname' => $socialUser->getNickname(),
+                'name' => $socialUser->getName(),
+                'email' => $socialUser->getEmail(),
+                'avatar' => $socialUser->getAvatar(),
+            ]); 
             $user = User::where('email', $socialUser->getEmail())->first();
             if ($user) {
                 if ($user->provider_name !== $provider) {
@@ -97,6 +104,8 @@ class AuthController extends Controller
             $token = $newUser->createToken($provider)->plainTextToken;
             return response()->json(['token' => $token], Response::HTTP_OK);
         } catch (\Exception $e) {
+            Log::error('Exception occurred: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
             return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
