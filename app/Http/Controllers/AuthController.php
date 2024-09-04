@@ -76,14 +76,15 @@ class AuthController extends Controller
     {
         try {
             $socialUser = Socialite::driver($provider)->user();
-            Log::info('Social User Data:', [
-                'id' => $socialUser->getId(),
-                'nickname' => $socialUser->getNickname(),
-                'name' => $socialUser->getName(),
-                'email' => $socialUser->getEmail(),
-                'avatar' => $socialUser->getAvatar(),
-            ]); 
-            $user = User::where('email', $socialUser->getEmail())->first();
+            return response()->json($socialUser);
+            // Log::info('Social User Data:', [
+            //     'id' => $socialUser->getId(),
+            //     'nickname' => $socialUser->getNickname(),
+            //     'name' => $socialUser->getName(),
+            //     'email' => $socialUser->getEmail(),
+            //     'avatar' => $socialUser->getAvatar(),
+            // ]); 
+            // $user = User::where('email', $socialUser->getEmail())->first();
             if ($user) {
                 if ($user->provider_name !== $provider) {
                     return response()->json([
@@ -92,22 +93,22 @@ class AuthController extends Controller
                     
                 }
                 //更新提供者 ID
-                $this->updateProviderId($user, $provider, $socialUser->getId());
-                Auth::login($user);
-                $user->last_login_at = now();
-                $user->save();
-                $token = $user->createToken($provider)->plainTextToken;
-                return response()->json(['token' => $token], Response::HTTP_OK);
+                // $this->updateProviderId($user, $provider, $socialUser->getId());
+                // Auth::login($user);
+                // $user->last_login_at = now();
+                // $user->save();
+                // $token = $user->createToken($provider)->plainTextToken;
+                // return response()->json(['token' => $token], Response::HTTP_OK);
             }
-            $newUser = $this->createNewUser($socialUser, $provider);
-            Auth::login($newUser);
-            $token = $newUser->createToken($provider)->plainTextToken;
-            return response()->json(['token' => $token], Response::HTTP_OK);
+            // $newUser = $this->createNewUser($socialUser, $provider);
+            // Auth::login($newUser);
+            // $token = $newUser->createToken($provider)->plainTextToken;
+            // return response()->json(['token' => $token], Response::HTTP_OK);
         } catch (\Exception $e) {
             Log::error('Exception occurred: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
-            return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(['error' => '無法登入。', 'message' => $e->getMessage(),'Stack trace',$e->getTraceAsString(),], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
