@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/auth/register', [AuthController::class, 'register'])->name('register');
 Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
-Route::get('/test', [AuthController::class, 'testLog']);
+Route::get('/auth/{provider}/redirect', [AuthController::class, 'redirectToProvider']);
+Route::post('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
 // Route::get('/auth/google', [AuthController::class, 'googleLogin'])->name('/auth/google');
 // Route::get('/auth/google/callback', [AuthController::class, 'googleLoginCallback'])->name('/auth/google/callback');

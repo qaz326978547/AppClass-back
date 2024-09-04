@@ -66,6 +66,46 @@ class AuthController extends Controller
         return response()->json(['token' => $token], Response::HTTP_OK);
     }
 
+
+    public function redirectToProvider(Request $provider)
+    {
+        $url =  Socialite::driver($provider)->redirect()->getTargetUrl();
+        return  response()->json(['url' => $url], Response::HTTP_OK);
+    
+    
+    }
+
+    public function handleProviderCallback(Request $request, $provider)
+    {
+        try {
+            $socialUser = Socialite::driver($provider)->user();
+            $user = User::where('email', $socialUser->getEmail())->first();
+            if ($user) {
+                if ($user->provider_name !== $provider) {
+                    return response()->json([
+                        'error' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。',
+                    ], Response::HTTP_CONFLICT);
+                    
+                }
+                //更新提供者 ID
+                $this->updateProviderId($user, $provider, $socialUser->getId());
+                Auth::login($user);
+                $user->last_login_at = now();
+                $user->save();
+                $token = $user->createToken($provider)->plainTextToken;
+                return response()->json(['token' => $token], Response::HTTP_OK);
+            }
+            $newUser = $this->createNewUser($socialUser, $provider);
+            Auth::login($newUser);
+            $token = $newUser->createToken($provider)->plainTextToken;
+            return response()->json(['token' => $token], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
+            return response()->json(['error' => '無法登入。', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
     /**
      *  將用戶重定向到 Google 的授權頁面
      *
@@ -85,7 +125,6 @@ class AuthController extends Controller
     {
         return $this->handleSocialLogin('google');
     }
-
     /**
      *  將用戶重定向到 Line 的授權頁面
      *
