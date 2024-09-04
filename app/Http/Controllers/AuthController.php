@@ -67,7 +67,7 @@ class AuthController extends Controller
     }
 
 
-    public function redirectToProvider(Request $provider)
+    public function redirectToProvider($provider)
 
     {
         return Socialite::driver($provider)->redirect();
