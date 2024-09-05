@@ -80,7 +80,6 @@ class AuthController extends Controller
              // 獲取返回的 state 和 session 中保存的 state
         $returnedState = $request->input('state');
         $sessionState = session('oauth_state');
-        dd($returnedState, $sessionState);
         // 比較兩者是否一致
         if (!$returnedState || $returnedState !== $sessionState) {
             return response()->json(['message' => '無效的 state，授權請求被拒絕'], 403);
