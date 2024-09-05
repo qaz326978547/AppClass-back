@@ -71,6 +71,8 @@ class AuthController extends Controller
     {
         $state = Str::random(40);  // 生成隨機的 state
         session(['oauth_state' => $state]);  // 將 state 存入 session
+        \Log::info('Generated state: ' . $state);
+
         return Socialite::driver($provider)->with(['state' => $state])
         ->redirect();    
     }
@@ -80,6 +82,8 @@ class AuthController extends Controller
              // 獲取返回的 state 和 session 中保存的 state
         $returnedState = $request->input('state');
         $sessionState = session('oauth_state');
+        \Log::info('Returned state: ' . $returnedState);
+\Log::info('Session state: ' . $sessionState);
         // 比較兩者是否一致
         if (!$returnedState || $returnedState !== $sessionState) {
             return response()->json(['message' => '無效的 state，授權請求被拒絕'], 403);
