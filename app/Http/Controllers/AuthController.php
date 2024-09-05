@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -70,23 +69,32 @@ class AuthController extends Controller
     public function redirectToProvider($provider)
 
     {
-        return Socialite::driver($provider)->redirect();
-    
+        $state = Str::random(40);  // 生成隨機的 state
+        session(['oauth_state' => $state]);  // 將 state 存入 session
+        return Socialite::driver($provider)->with(['state' => $state])
+        ->redirect();    
     }
 
     public function handleProviderCallback(Request $request, $provider)
     {
+             // 獲取返回的 state 和 session 中保存的 state
+        $returnedState = $request->input('state');
+        $sessionState = session('oauth_state');
+
+        // 比較兩者是否一致
+        if (!$returnedState || $returnedState !== $sessionState) {
+            return response()->json(['message' => '無效的 state，授權請求被拒絕'], 403);
+        }
+
+        // 清除 session 中的 state
+        session()->forget('oauth_state');
         try {
-            // 获取 OAuth 提供者的用户信息
             $socialUser = Socialite::driver($provider)->user();
-            
-            // 查找或创建用户
             $user = User::where('email', $socialUser->getEmail())->first();
             if ($user) {
                 // 用户已存在，更新提供者信息
                 if ($user->provider_name !== $provider) {
-                    return redirect('http://localhost:5173/login')
-                        ->with('error', '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。');
+                    return response()->json(['message' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。'], Response::HTTP_CONFLICT);
                 }
                 // 更新提供者 ID
                 $this->updateProviderId($user, $provider, $socialUser->getId());
@@ -101,36 +109,15 @@ class AuthController extends Controller
             
             // 生成 token
             $token = $user->createToken($provider)->plainTextToken;
-            
-            // 存储 token 到 session 中
-            $request->session()->put('token', $token);
-            
             // 重定向到前端页面
-            return redirect()->to('http://localhost:5173/auth/{$provider}/success')->with('message', '登入成功');
+            return response()->json(['token' => $token], Response::HTTP_OK);
             
         } catch (\Exception $e) {
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
-            return redirect()->to('http://localhost:5173/login')->with('error', '無法登入。');
+            return response()->json(['message' => $provider . ' 登入錯誤: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function getToken(Request $request)
-{
-    $token = $request->session()->get('token');
-    if ($token) {
-        // 从 session 中获取 token
-        $request->session()->forget('token'); // 确保 token 被清除
-        return response()->json([
-            'status' => 'success',
-            'token' => $token
-        ]);
-    } else {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Token not found'
-        ], Response::HTTP_NOT_FOUND);
-    }
-}
 
     /**
      * 新增使用者
