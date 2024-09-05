@@ -81,16 +81,16 @@ class AuthController extends Controller
     {
              // 獲取返回的 state 和 session 中保存的 state
         $returnedState = $request->input('state');
-        $sessionState = session('oauth_state');
-        \Log::info('Returned state: ' . $returnedState);
-\Log::info('Session state: ' . $sessionState);
-        // 比較兩者是否一致
-        if (!$returnedState || $returnedState !== $sessionState) {
-            return response()->json(['message' => '無效的 state，授權請求被拒絕'], 403);
-        }
+//         $sessionState = session('oauth_state');
+//         \Log::info('Returned state: ' . $returnedState);
+// \Log::info('Session state: ' . $sessionState);
+//         // 比較兩者是否一致
+//         if (!$returnedState || $returnedState !== $sessionState) {
+//             return response()->json(['message' => '無效的 state，授權請求被拒絕'], 403);
+//         }
 
         // 清除 session 中的 state
-        session()->forget('oauth_state');
+        // session()->forget('oauth_state');
         try {
             $socialUser = Socialite::driver($provider)->user();
             $user = User::where('email', $socialUser->getEmail())->first();
