@@ -73,7 +73,6 @@ class AuthController extends Controller
 
     public function handleProviderCallback(Request $request, $provider)
     {
-
         try {
             $socialUser = Socialite::driver($provider)->user();
             $user = User::where('email', $socialUser->getEmail())->first();
@@ -95,7 +94,7 @@ class AuthController extends Controller
             
 
             // 重定向到前端页面
-            return  redirect('http://localhost:5173/');
+            return  redirect('http://localhost:5173/member');
         } catch (\Exception $e) {
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
             return redirect('http://localhost:5173/');
