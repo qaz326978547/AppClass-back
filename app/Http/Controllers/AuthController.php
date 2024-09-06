@@ -103,7 +103,12 @@ class AuthController extends Controller
 
     public function getToken()
     {
-        return response()->json(['token' => auth()->user()->createToken('token')->plainTextToken], Response::HTTP_OK);
+        if(auth()->check()){
+            $token = auth()->user()->createToken('token')->plainTextToken;
+            return response()->json(['token' => $token], Response::HTTP_OK);
+        }else{
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+        }
     }
 
 
