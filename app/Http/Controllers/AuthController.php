@@ -94,7 +94,8 @@ class AuthController extends Controller
             
 
             // 重定向到前端页面
-            return  redirect('http://localhost:5173/member');
+            return  redirect('http://localhost:5173/auth/callback' . '?token=' . $user->createToken('token')->plainTextToken);
+        
         } catch (\Exception $e) {
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
             return redirect('http://localhost:5173/');
@@ -103,12 +104,15 @@ class AuthController extends Controller
 
     public function getToken()
     {
-        if(auth()->check()){
+        {
             $token = auth()->user()->createToken('token')->plainTextToken;
             return response()->json(['token' => $token], Response::HTTP_OK);
-        }else{
-            return response()->json(['message' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
+    }
+
+    public function getUser()
+    {
+        return response()->json(['user' => auth()->user()], Response::HTTP_OK);
     }
 
 

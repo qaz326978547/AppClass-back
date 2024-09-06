@@ -25,8 +25,14 @@ Route::middleware(['web'])->group(function () {
     Route::get('/auth/{provider}/redirect', [AuthController::class, 'redirectToProvider']);
     Route::get('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
 });
+
 Route::get('/auth/token', [AuthController::class, 'getToken'])->name('token');
 
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/auth/token', [AuthController::class, 'getToken'])->name('token');
+    Route::get('/auth/user', [AuthController::class, 'getUser'])->name('user');
+});
 
 // Route::get('/auth/google', [AuthController::class, 'googleLogin'])->name('/auth/google');
 // Route::get('/auth/google/callback', [AuthController::class, 'googleLoginCallback'])->name('/auth/google/callback');
