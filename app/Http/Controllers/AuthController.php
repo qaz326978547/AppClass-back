@@ -67,30 +67,13 @@ class AuthController extends Controller
 
 
     public function redirectToProvider($provider)
-
     {
-        $state = Str::random(40);  // 生成隨機的 state
-        session(['oauth_state' => $state]);  // 將 state 存入 session
-        \Log::info('Generated state: ' . $state);
-
-        return Socialite::driver($provider)->with(['state' => $state])
-        ->redirect();    
+        return Socialite::driver($provider)->redirect();    
     }
 
     public function handleProviderCallback(Request $request, $provider)
     {
-             // 獲取返回的 state 和 session 中保存的 state
-        $returnedState = $request->input('state');
-//         $sessionState = session('oauth_state');
-//         \Log::info('Returned state: ' . $returnedState);
-// \Log::info('Session state: ' . $sessionState);
-//         // 比較兩者是否一致
-//         if (!$returnedState || $returnedState !== $sessionState) {
-//             return response()->json(['message' => '無效的 state，授權請求被拒絕'], 403);
-//         }
 
-        // 清除 session 中的 state
-        // session()->forget('oauth_state');
         try {
             $socialUser = Socialite::driver($provider)->user();
             $user = User::where('email', $socialUser->getEmail())->first();
@@ -110,15 +93,18 @@ class AuthController extends Controller
                 Auth::login($user);
             }
             
-            // 生成 token
-            $token = $user->createToken($provider)->plainTextToken;
+
             // 重定向到前端页面
-            return response()->json(['token' => $token], Response::HTTP_OK);
-            
+            return  redirect('http://localhost:5173/');
         } catch (\Exception $e) {
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
-            return response()->json(['message' => $provider . ' 登入錯誤: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return redirect('http://localhost:5173/');
         }
+    }
+
+    public function getToken()
+    {
+        return response()->json(['token' => auth()->user()->createToken('token')->plainTextToken], Response::HTTP_OK);
     }
 
 

@@ -23,7 +23,7 @@ Route::post('/auth/register', [AuthController::class, 'register'])->name('regist
 Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
 Route::middleware(['web'])->group(function () {
     Route::get('/auth/{provider}/redirect', [AuthController::class, 'redirectToProvider']);
-    Route::post('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
+    Route::get('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback']);
 });
 
 
