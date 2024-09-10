@@ -40,7 +40,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
-        $token = $user->createToken('token')->accessToken;
+        $token = $user->createToken('token')->plainTextToken;
         return response()->json(['token' => $token], Response::HTTP_CREATED);
     }
 
@@ -61,7 +61,7 @@ class AuthController extends Controller
             ], Response::HTTP_UNAUTHORIZED);
         }
         $user = User::where('email', $request->email)->first();
-        $token = $user->createToken('token')->accessToken;
+        $token = $user->createToken('token')->plainTextToken;
         return response()->json(['token' => $token], Response::HTTP_OK);
     }
 
@@ -91,11 +91,13 @@ class AuthController extends Controller
                 $user = $this->createNewUser($socialUser, $provider);
                 Auth::login($user);
             }
-            
+            $token = $user->createToken('token')->accessToken;
+
 
             // 重定向到前端页面
-            return  redirect('http://localhost:5173/auth/callback' . '?token=' . $user->createToken('token')->accessToken);
-        
+            return  redirect('http://localhost:5173/auth/callback ' . $provider . '?token=' . $token);
+       
+       
         } catch (\Exception $e) {
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
             return redirect('http://localhost:5173/');
@@ -105,7 +107,7 @@ class AuthController extends Controller
     public function getToken()
     {
         {
-            $token = auth()->user()->createToken('token')->accessToken;
+            $token = auth()->user()->createToken('token')->plainTextToken;
             return response()->json(['token' => $token], Response::HTTP_OK);
         }
     }
