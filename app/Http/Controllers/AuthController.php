@@ -95,7 +95,7 @@ class AuthController extends Controller
 
 
             // 重定向到前端页面
-            return  redirect('http://localhost:5173/auth/callback ' . $provider . '?token=' . $token);
+            return redirect('http://localhost:5173/auth/callback' . '?provider=' . $provider . '&token=' . $token);
        
        
         } catch (\Exception $e) {
