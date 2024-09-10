@@ -40,7 +40,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
-        $token = $user->createToken('token')->plainTextToken;
+        $token = $user->createToken('token')->accessToken;
         return response()->json(['token' => $token], Response::HTTP_CREATED);
     }
 
@@ -61,7 +61,7 @@ class AuthController extends Controller
             ], Response::HTTP_UNAUTHORIZED);
         }
         $user = User::where('email', $request->email)->first();
-        $token = $user->createToken('token')->plainTextToken;
+        $token = $user->createToken('token')->accessToken;
         return response()->json(['token' => $token], Response::HTTP_OK);
     }
 
@@ -107,7 +107,7 @@ class AuthController extends Controller
     public function getToken()
     {
         {
-            $token = auth()->user()->createToken('token')->plainTextToken;
+            $token = auth()->user()->createToken('token')->accessToken;
             return response()->json(['token' => $token], Response::HTTP_OK);
         }
     }
