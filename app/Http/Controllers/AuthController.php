@@ -79,7 +79,7 @@ class AuthController extends Controller
             if ($user) {
                 // 用户已存在，更新提供者信息
                 if ($user->provider_name !== $provider) {
-                    return response()->json(['message' => '該電子郵件已通過其他提供者註冊，請使用原有提供者登入。'], Response::HTTP_CONFLICT);
+                    return redirect('http://localhost:5173/auth/callback' . '?provider=' . $provider . '&error=該電子郵件已通過其他提供者註冊，請使用原有提供者登入。');
                 }
                 // 更新提供者 ID
                 $this->updateProviderId($user, $provider, $socialUser->getId());
@@ -96,8 +96,6 @@ class AuthController extends Controller
 
             // 重定向到前端页面
             return redirect('http://localhost:5173/auth/callback' . '?provider=' . $provider . '&token=' . $token);
-       
-       
         } catch (\Exception $e) {
             Log::error($provider . ' 登入錯誤: ' . $e->getMessage());
             return redirect('http://localhost:5173/');
