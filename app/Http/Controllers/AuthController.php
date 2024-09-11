@@ -41,7 +41,7 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
         ]);
         $token = $user->createToken('token')->accessToken;
-        return response()->json(['token' => $token], Response::HTTP_CREATED);
+        return response()->json(['data' => $token], Response::HTTP_CREATED);
     }
 
     public function login(Request $request)
@@ -62,7 +62,7 @@ class AuthController extends Controller
         }
         $user = User::where('email', $request->email)->first();
         $token = $user->createToken('token')->accessToken;
-        return response()->json(['token' => $token], Response::HTTP_OK);
+        return response()->json(['data' => $token], Response::HTTP_OK);
     }
 
 
@@ -104,13 +104,13 @@ class AuthController extends Controller
     {
         {
             $token = auth()->user()->createToken('token')->accessToken;
-            return response()->json(['token' => $token], Response::HTTP_OK);
+            return response()->json(['data' => $token], Response::HTTP_OK);
         }
     }
 
     public function getUser()
     {
-        return response()->json(['user' => auth()->user()], Response::HTTP_OK);
+        return response()->json(['data' => auth()->user()], Response::HTTP_OK);
     }
 
 
